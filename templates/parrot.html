@@ -1,0 +1,104 @@
+<!doctype html>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+<title>Parrot of Pirates</title>
+
+<style type="text/css">
+body { -webkit-touch-callout: none !important; }
+h1 { -webkit-user-select: none !important; }
+a { -webkit-user-select: none !important; }
+.box {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	grid-gap: 20px;
+	user-select: none;
+	-webkit-touch-callout: none;
+	-webkit-user-select: none;
+	-moz-user-select: none;
+}
+.btn {
+	background: lightblue;
+	border-radius: 5px;
+	padding: 45px 5px;
+	font-size: xx-large;
+	text-align: center;
+}
+</style>
+
+<div id='ctrl'>
+<h1>The Parrot of Pirates</h1>
+<div class='box'>
+<div class='btn' id="beak">Beak</div>
+<div class='btn' id="wings_up">Wings Up</div>
+<div class='btn' id="head">Head</div>
+<div class='btn' id="wings_down">Wings Down</div>
+<div class='btn' id="left_eye">Left Eye</div>
+<div class='btn' id="right_eye">Right Eye</div>
+</div>
+</div>
+
+<hr/>
+
+<a href="http://{{ local_ip }}:5000/">local ip</a>
+<a href="/wifi">wifi status</a>
+<a href="javascript:toggleFullscreen()">toggle fullscreen</a>
+<a href="/reboot">reboot</a>
+
+
+<script>
+function get(url) {
+	var xmlhttp = new XMLHttpRequest();
+	xmlhttp.open("GET", url, true);
+	xmlhttp.send();
+}
+function start(id) {
+	//window.alert("start!", id)
+	get('/start?motor='+id)
+}
+function stop(id) {
+	//window.alert("stop!", id)
+	get('/stop?motor='+id)
+}
+function onMouseDown(event) {
+	if (event.target.setCapture) {
+		event.target.setCapture(true)
+	}
+	event.preventDefault()
+	start(event.target.id)
+}
+function onMouseUp(event) {
+	stop(event.target.id)
+}
+function onTouchStart(event) {
+	start(event.target.id)
+}
+function onTouchEnd(event) {
+	stop(event.target.id)
+}
+function onTouchCancel(event) {
+	stop(event.target.id)
+}
+var ids = ['beak', 'head', 'wings_up', 'wings_down', 'left_eye', 'right_eye'];
+for (var i = 0; i < ids.length; i++) {
+	var e = document.getElementById(ids[i]);
+	e.addEventListener("mousedown", onMouseDown, false);
+	e.addEventListener("mouseup", onMouseUp, false);
+	e.addEventListener("touchstart", onTouchStart, false);
+	e.addEventListener("touchend", onTouchEnd, false);
+	e.addEventListener("touchcancel", onTouchCancel, false);
+}
+function toggleFullscreen() {
+	var doc = window.document;
+	var docEl = doc.documentElement;
+
+	var requestFullScreen = docEl.requestFullscreen || docEl.mozRequestFullScreen || docEl.webkitRequestFullScreen || docEl.msRequestFullscreen;
+	var cancelFullScreen = doc.exitFullscreen || doc.mozCancelFullScreen || doc.webkitExitFullscreen || doc.msExitFullscreen;
+
+	if (!doc.fullscreenElement && !doc.mozFullScreenElement && !doc.webkitFullscreenElement && !doc.msFullscreenElement) {
+		requestFullScreen.call(docEl);
+	} else {
+		cancelFullScreen.call(doc);
+	}
+}
+</script>
