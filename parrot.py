@@ -1,4 +1,5 @@
 import subprocess
+import os
 
 from flask import Flask
 from flask import render_template, request
@@ -16,6 +17,9 @@ GPIO.setmode(GPIO.BCM)
 GPIO.setup(20, GPIO.OUT)
 GPIO.setup(21, GPIO.OUT)
 
+# SPEAKER_DEV = "bluealsa:HCI=hci0,DEV=90:C6:82:02:78:19,PROFILE=a2dp" # Stormtrooper
+SPEAKER_DEV = "sysdefault"
+
 def off():
     for m in [1, 2, 3, 4]:
         mh.getMotor(m).run(Adafruit_MotorHAT.RELEASE)
@@ -28,6 +32,15 @@ def reboot():
     subprocess.check_output('sudo shutdown -r now', shell=True)
     return "OK"
 
+@app.route('/bluetooth')
+def bluetooth():
+    bluetoothctl_out = subprocess.check_output('''sudo bluetoothctl <<EOF
+info {}
+quit
+EOF
+'''.format(SPEAKER_DEV), shell=True)
+    return render_template('bluetooth.html', bluetoothctl_out=bluetoothctl_out)
+
 @app.route('/wifi')
 def wifi():
     iwconfig_out = subprocess.check_output(['iwconfig'])
@@ -36,7 +49,8 @@ def wifi():
 @app.route('/')
 def index():
     local_ip = subprocess.check_output("ip addr show wlan0 | grep -Po 'inet \K[\d.]+'", shell=True)
-    return render_template('parrot.html', local_ip=local_ip)
+    audio_files = [name.split('.')[0] for name in os.listdir('.') if name.endswith('.wav')] 
+    return render_template('parrot.html', local_ip=local_ip, audio_files=audio_files)
 
 @app.route('/start')
 def start():
@@ -80,3 +94,11 @@ def stop():
     if motor == 'right_eye':
         GPIO.output(21, GPIO.LOW)
     return 'OK'
+
+@app.route('/play')
+def play():
+    audio_file = request.args.get('audio') + '.wav'
+    cmd = "aplay -D {} {}".format(SPEAKER_DEV, audio_file)
+    subprocess.check_output(cmd, shell=True)
+    return "OK"
+

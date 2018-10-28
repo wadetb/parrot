@@ -8,7 +8,7 @@
 body { -webkit-touch-callout: none !important; }
 h1 { -webkit-user-select: none !important; }
 a { -webkit-user-select: none !important; }
-.box {
+.box1 {
 	display: grid;
 	grid-template-columns: 1fr 1fr;
 	grid-gap: 20px;
@@ -16,6 +16,12 @@ a { -webkit-user-select: none !important; }
 	-webkit-touch-callout: none;
 	-webkit-user-select: none;
 	-moz-user-select: none;
+}
+.box2 {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	grid-gap: 20px;
+	user-select: none;
 }
 .btn {
 	background: lightblue;
@@ -26,22 +32,31 @@ a { -webkit-user-select: none !important; }
 }
 </style>
 
-<div id='ctrl'>
 <h1>The Parrot of Pirates</h1>
-<div class='box'>
-<div class='btn' id="beak">Beak</div>
-<div class='btn' id="wings_up">Wings Up</div>
-<div class='btn' id="head">Head</div>
-<div class='btn' id="wings_down">Wings Down</div>
-<div class='btn' id="left_eye">Left Eye</div>
-<div class='btn' id="right_eye">Right Eye</div>
+<div class='box1'>
+<button class='btn' id="beak">Beak</button>
+<button class='btn' id="wings_up">Wings Up</button>
+<button class='btn' id="head">Head</button>
+<button class='btn' id="wings_down">Wings Down</button>
+<button class='btn' id="left_eye">Left Eye</button>
+<button class='btn' id="right_eye">Right Eye</button>
 </div>
+
+<hr/>
+
+<h1>Speech</h1>
+
+<div class='box2'>
+{% for audio_file in audio_files %} 
+<button class='btn' id="{{ audio_file }}">{{ audio_file }}</button>
+{% endfor %}
 </div>
 
 <hr/>
 
 <a href="http://{{ local_ip }}:5000/">local ip</a>
 <a href="/wifi">wifi status</a>
+<a href="/bluetooth">bluetooth status</a>
 <a href="javascript:toggleFullscreen()">toggle fullscreen</a>
 <a href="/reboot">reboot</a>
 
@@ -79,15 +94,31 @@ function onTouchEnd(event) {
 function onTouchCancel(event) {
 	stop(event.target.id)
 }
-var ids = ['beak', 'head', 'wings_up', 'wings_down', 'left_eye', 'right_eye'];
-for (var i = 0; i < ids.length; i++) {
-	var e = document.getElementById(ids[i]);
+
+var motor_ids = ['beak', 'head', 'wings_up', 'wings_down', 'left_eye', 'right_eye'];
+for (var i = 0; i < motor_ids.length; i++) {
+	var e = document.getElementById(motor_ids[i]);
 	e.addEventListener("mousedown", onMouseDown, false);
 	e.addEventListener("mouseup", onMouseUp, false);
 	e.addEventListener("touchstart", onTouchStart, false);
 	e.addEventListener("touchend", onTouchEnd, false);
 	e.addEventListener("touchcancel", onTouchCancel, false);
 }
+
+function onAudio(event) {
+	get('/play?audio='+event.target.id)
+}
+
+var audio_ids = [
+{% for audio_file in audio_files %} 
+	'{{ audio_file }}',
+{% endfor %}
+];
+for (var i = 0; i < audio_ids.length; i++) {
+	var e = document.getElementById(audio_ids[i]);
+	e.addEventListener("mousedown", onAudio, false);
+}
+
 function toggleFullscreen() {
 	var doc = window.document;
 	var docEl = doc.documentElement;
