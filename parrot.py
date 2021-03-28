@@ -7,9 +7,9 @@ app = Flask(__name__)
 
 import atexit
 
-from Adafruit_MotorHAT import Adafruit_MotorHAT, Adafruit_DCMotor
+from adafruit_motorkit import MotorKit
 
-mh = Adafruit_MotorHAT(addr=0x60)
+mk = MotorKit()
 
 import RPi.GPIO as GPIO
 
@@ -56,21 +56,13 @@ def index():
 def start():
     motor = request.args.get('motor')
     if motor == 'beak':
-        m = mh.getMotor(3)
-        m.setSpeed(200)
-        m.run(Adafruit_MotorHAT.BACKWARD)
+        mk.motor3.throttle = 0.2
     if motor == 'wings_down':
-        m = mh.getMotor(2)
-        m.setSpeed(200)
-        m.run(Adafruit_MotorHAT.BACKWARD)
+        mk.motor2.throttle = -0.2
     if motor == 'wings_up':
-        m = mh.getMotor(2)
-        m.setSpeed(200)
-        m.run(Adafruit_MotorHAT.FORWARD)
+        mk.motor2.throttle = 0.2
     if motor == 'head':
-        m = mh.getMotor(4)
-        m.setSpeed(200)
-        m.run(Adafruit_MotorHAT.FORWARD)
+        mk.motor4.throttle = 0.2
     if motor == 'left_eye':
         GPIO.output(20, GPIO.HIGH)
     if motor == 'right_eye':
@@ -81,14 +73,11 @@ def start():
 def stop():
     motor = request.args.get('motor')
     if motor == 'beak':
-        m = mh.getMotor(3)
-        m.run(Adafruit_MotorHAT.RELEASE)
+        mk.motor3.throttle = None
     if motor in ['wings_up', 'wings_down']:
-        m = mh.getMotor(2)
-        m.run(Adafruit_MotorHAT.RELEASE)
+        mk.motor2.throttle = None
     if motor == 'head':
-        m = mh.getMotor(4)
-        m.run(Adafruit_MotorHAT.RELEASE)
+        mk.motor4.throttle = None
     if motor == 'left_eye':
         GPIO.output(20, GPIO.LOW)
     if motor == 'right_eye':
