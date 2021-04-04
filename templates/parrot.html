@@ -34,6 +34,8 @@ a { -webkit-user-select: none !important; }
 
 <h1>The Parrot of Pirates</h1>
 <div class='box1'>
+<button class='btn' id="start_sm">Start</button>
+<button class='btn' id="stop_sm">Stop</button>
 <button class='btn' id="beak">Beak</button>
 <button class='btn' id="wings_up">Wings Up</button>
 <button class='btn' id="head">Head</button>
@@ -54,6 +56,8 @@ a { -webkit-user-select: none !important; }
 
 <hr/>
 
+<a href="javascript:get('/start_sm')">start sm</a>
+<a href="javascript:get('/stop_sm')">stop sm</a>
 <a href="http://{{ local_ip }}:5000/">local ip</a>
 <a href="/wifi">wifi status</a>
 <a href="/bluetooth">bluetooth status</a>
@@ -68,11 +72,9 @@ function get(url) {
 	xmlhttp.send();
 }
 function start(id) {
-	//window.alert("start!", id)
 	get('/start?motor='+id)
 }
 function stop(id) {
-	//window.alert("stop!", id)
 	get('/stop?motor='+id)
 }
 function onMouseDown(event) {

@@ -1,3 +1,7 @@
+#
+# Install with:
+# ln parrot.service /etc/systemd/system/
+#
 [Unit]
 Description=Parrot
 After=network.target
@@ -9,7 +13,7 @@ Restart=always
 RestartSec=1
 User=pi
 WorkingDirectory=/home/pi/parrot
-ExecStart=/bin/sh start.sh
+ExecStart=/bin/sh /home/pi/parrot/start
 
 [Install]
 WantedBy=multi-user.target
