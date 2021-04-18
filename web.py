@@ -40,37 +40,45 @@ def index():
     return render_template('parrot.html', local_ip=local_ip, audio_files=audio_files)
 
 
-@app.route('/start')
-def start():
-    motor = request.args.get('motor')
-    if motor == 'beak':
-        hw.mk.motor3.throttle = 0.2
-    if motor == 'wings_down':
-        hw.mk.motor2.throttle = -0.2
-    if motor == 'wings_up':
-        hw.mk.motor2.throttle = 0.2
-    if motor == 'head':
-        hw.mk.motor4.throttle = -0.5
-    if motor == 'left_eye':
-        hw.leye.value = True
-    if motor == 'right_eye':
-        hw.reye.value = True
-    return 'OK'
+@app.route('/button')
+def button():
+    b = request.args.get('b')
+    s = request.args.get('s')
+    if b == 'b1':
+        hw.b1.web_pressed = (s == 'down')
+    if b == 'b2':
+        hw.b2.web_pressed = (s == 'down')
+    return "OK"
 
 
-@app.route('/stop')
-def stop():
-    motor = request.args.get('motor')
-    if motor == 'beak':
-        hw.mk.motor3.throttle = None
-    if motor in ['wings_up', 'wings_down']:
-        hw.mk.motor2.throttle = None
-    if motor == 'head':
-        hw.mk.motor4.throttle = None
-    if motor == 'left_eye':
-        hw.leye.value = False
-    if motor == 'right_eye':
-        hw.reye.value = False
+@app.route('/motor')
+def motor():
+    m = request.args.get('m')
+    s = request.args.get('s')
+    if s == 'on':
+        if m == 'beak':
+            hw.mk.motor3.throttle = 0.5
+        if m == 'wings_down':
+            hw.mk.motor2.throttle = -0.2
+        if m == 'wings_up':
+            hw.mk.motor2.throttle = 1
+        if m == 'head':
+            hw.mk.motor4.throttle = -0.5
+        if m == 'left_eye':
+            hw.leye.value = True
+        if m == 'right_eye':
+            hw.reye.value = True
+    else:
+        if m == 'beak':
+            hw.mk.motor3.throttle = None
+        if m in ['wings_up', 'wings_down']:
+            hw.mk.motor2.throttle = None
+        if m == 'head':
+            hw.mk.motor4.throttle = None
+        if m == 'left_eye':
+            hw.leye.value = False
+        if m == 'right_eye':
+            hw.reye.value = False
     return 'OK'
 
 

@@ -34,8 +34,10 @@ a { -webkit-user-select: none !important; }
 
 <h1>The Parrot of Pirates</h1>
 <div class='box1'>
-<button class='btn' id="start_sm">Start</button>
-<button class='btn' id="stop_sm">Stop</button>
+<button class='btn' id="start_sm">Reset Game</button>
+<button class='btn' id="stop_sm">Stop Game</button>
+<button class='btn' id="b1">Wall Button 1</button>
+<button class='btn' id="b2">Wall Button 2</button>
 <button class='btn' id="beak">Beak</button>
 <button class='btn' id="wings_up">Wings Up</button>
 <button class='btn' id="head">Head</button>
@@ -71,40 +73,45 @@ function get(url) {
 	xmlhttp.open("GET", url, true);
 	xmlhttp.send();
 }
-function start(id) {
-	get('/start?motor='+id)
-}
-function stop(id) {
-	get('/stop?motor='+id)
-}
-function onMouseDown(event) {
+
+function onButtonDownEvent(event) {
 	if (event.target.setCapture) {
 		event.target.setCapture(true)
 	}
 	event.preventDefault()
-	start(event.target.id)
+	get('/button?s=down&b='+event.target.id)
 }
-function onMouseUp(event) {
-	stop(event.target.id)
+function onButtonUpEvent(event) {
+	get('/button?s=up&b='+event.target.id)
 }
-function onTouchStart(event) {
-	start(event.target.id)
-}
-function onTouchEnd(event) {
-	stop(event.target.id)
-}
-function onTouchCancel(event) {
-	stop(event.target.id)
+var btn_ids = ['b1', 'b2'];
+for (var i = 0; i < btn_ids.length; i++) {
+	var e = document.getElementById(btn_ids[i]);
+	e.addEventListener("mousedown", onButtonDownEvent, false);
+	e.addEventListener("mouseup", onButtonUpEvent, false);
+	e.addEventListener("touchstart", onButtonDownEvent, false);
+	e.addEventListener("touchend", onButtonUpEvent, false);
+	e.addEventListener("touchcancel", onButtonUpEvent, false);
 }
 
+function onStartMotorEvent(event) {
+	if (event.target.setCapture) {
+		event.target.setCapture(true)
+	}
+	event.preventDefault()
+	get('/motor?s=on&m='+event.target.id)
+}
+function onStopMotorEvent(event) {
+	get('/motor?s=off&m='+event.target.id)
+}
 var motor_ids = ['beak', 'head', 'wings_up', 'wings_down', 'left_eye', 'right_eye'];
 for (var i = 0; i < motor_ids.length; i++) {
 	var e = document.getElementById(motor_ids[i]);
-	e.addEventListener("mousedown", onMouseDown, false);
-	e.addEventListener("mouseup", onMouseUp, false);
-	e.addEventListener("touchstart", onTouchStart, false);
-	e.addEventListener("touchend", onTouchEnd, false);
-	e.addEventListener("touchcancel", onTouchCancel, false);
+	e.addEventListener("mousedown", onStartMotorEvent, false);
+	e.addEventListener("mouseup", onStopMotorEvent, false);
+	e.addEventListener("touchstart", onStartMotorEvent, false);
+	e.addEventListener("touchend", onStopMotorEvent, false);
+	e.addEventListener("touchcancel", onStopMotorEvent, false);
 }
 
 function onAudio(event) {
