@@ -1,5 +1,6 @@
 import asyncio
-import atexit
+import math
+import os
 import random
 import subprocess
 import threading
@@ -18,6 +19,8 @@ sm_loop = asyncio.new_event_loop()
 spawn = asyncio.create_task
 
 ALL_BUTTONS = [hw.b1, hw.b2]
+
+oob_queue = []
 
 
 def any_button_pressed():
@@ -44,37 +47,68 @@ def sample_wave(path):
         assert w.getnchannels() == 1
         assert w.getsampwidth() == 2
         n = w.getnframes()
-        f = w.getframerate() / 10
+        f = int(w.getframerate() / 10)
         signal = np.frombuffer(w.readframes(n), dtype=np.int16)
 
-    signal = signal / np.linalg.norm(signal)
-    return [np.average(np.absolute(signal[i*f:(i+1)*f]))
-            for i in range(n // f)]
+    r = np.array([np.average(np.absolute(signal[i*f:(i+1)*f]))
+                  for i in range(n // f)])
+    r = r / np.max(r)
+    return r
+
+
+async def flap_wings():
+    while True:
+        await asyncio.sleep(0.5 + random.random() * 1)
+        t = 0.25 + random.random() * 0.25
+        hw.wings.throttle = 0.5
+        await asyncio.sleep(t)
+        hw.wings.throttle = -0.3
+        await asyncio.sleep(t * 0.25)
+        hw.wings.throttle = None
+
+
+async def animate_speech(path):
+    frames = sample_wave(path)
+    print('FRAMES', frames)
+
+    audio_task = spawn(run(['/usr/bin/aplay', path]))
+
+    try:
+        wings_task = spawn(flap_wings())
+        for f in frames:
+            hw.head.throttle = -0.6 if f > 0.05 else None
+            hw.beak.throttle = math.pow(f, 0.9) - 0.3
+            await asyncio.sleep(0.1)
+    finally:
+        wings_task.cancel()
+        hw.wings.throttle = None
+        hw.head.throttle = None
+        hw.beak.throttle = None
+
+    await audio_task
 
 
 async def say(text):
     print('SAY', text)
     await run([
         '/usr/bin/espeak',
-        '-v', 'en', '-s', '130', '-p', '65', '-g', '3',
+        '-v', 'en', '-s', '150', '-p', '125', '-g', '3',
         '-w', 'speech.wav',
         text])
+    await animate_speech('speech.wav')
 
-    frames = sample_wave('speech.wav')
-    print('FRAMES', frames)
 
-    audio_task = spawn(run(['/usr/bin/aplay', 'speech.wav']))
-
-    try:
-        for f in frames:
-            print('BEAK', f)
-            hw.beak.throttle = f * 0.5
-            await asyncio.sleep(0.1)
-    finally:
-        hw.beak.throttle = None
-
-    await audio_task
-
+async def pause(secs):
+    n = 0
+    while n < secs:
+        if len(oob_queue):
+            cmd, args = oob_queue.pop()
+            if cmd == 'say':
+                await say(args[0])
+            if cmd == 'say_file':
+                await animate_speech(args[0])
+        await asyncio.sleep(0.1)
+        n += 0.1
 
 async def flash_button(btn, count):
     print('FLASH', 10)
@@ -98,20 +132,19 @@ async def flash_button(btn, count):
 async def target_flash_loop(btn):
     while True:
         await flash_button(btn, 12)
-        await asyncio.sleep(1)
+        await pause(1)
 
 
 async def play_game(btn):
     round = 1
 
     while True:
+        await flash_button(btn, 48)
+
         if round == 1:
             await say('Hi! Looks like you want to play the game! Drop down and get ready.')
         else:
             await say('Drop down and get ready for the next one.')
-
-        await flash_button(btn, 48)
-        await asyncio.sleep(5)
 
         await say('Which one will I choose first?')
         for n in range(len(ALL_BUTTONS) * 3):
@@ -133,12 +166,12 @@ async def play_game(btn):
                 break
             if time.time() - start_time > time_limit:
                 break
-            await asyncio.sleep(0.1)
+            await pause(0.1)
 
         flash_task.cancel()
 
         while btn.pressed():
-            await asyncio.sleep(1)
+            await pause(0.1)
         btn.led_dio.value = False
 
         if win:
@@ -149,7 +182,18 @@ async def play_game(btn):
 
         round += 1
 
-    await say('Try again soon!')
+    await say('Try again!')
+
+
+async def play_joke():
+    path = random.choice([
+        'static/8_pirates.wav',
+        'static/80th_bday.wav',
+        'static/addictive.wav',
+        'static/boxing.wav',
+        'static/just_waved.wav',
+    ])
+    await animate_speech(path)
 
 
 async def task_loop():
@@ -157,12 +201,15 @@ async def task_loop():
 
     while True:
         while True:
-            await asyncio.sleep(0.1)
             btn = any_button_pressed()
             if btn is not None:
                 break
+            await pause(0.1)
 
-        await play_game(btn)
+        await flash_button(btn, 32)
+        await play_joke()
+
+        # await play_game(btn)
 
 
 def thread_entry():
@@ -193,6 +240,3 @@ def stop():
     if sm_thread is not None:
         sm_thread.join()
         sm_thread = None
-
-
-atexit.register(stop)

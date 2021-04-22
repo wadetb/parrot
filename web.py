@@ -82,11 +82,10 @@ def motor():
     return 'OK'
 
 
-@app.route('/play')
-def play():
-    audio_file = request.args.get('audio') + '.wav'
-    cmd = "aplay -D {} static/{}".format(hw.SPEAKER_DEV, audio_file)
-    subprocess.check_output(cmd, shell=True)
+@app.route('/say_file')
+def say_file():
+    audio_file = 'static/' + request.args.get('file') + '.wav'
+    sm.oob_queue.append(('say_file', [audio_file]))
     return "OK"
 
 
