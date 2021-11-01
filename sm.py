@@ -67,6 +67,18 @@ async def flap_wings():
         hw.wings.throttle = None
 
 
+async def stop_video():
+    await run(['killall', 'omxplayer.bin'])
+
+
+async def play_video(path, start_time):
+    await run(['killall', 'omxplayer.bin'])
+    if start_time == '00:00:00':
+        spawn(run(['/usr/bin/omxplayer', '-loop', path]))
+    else:
+        spawn(run(['/usr/bin/omxplayer', '-l', start_time, path]))
+
+
 async def animate_speech(path):
     frames = sample_wave(path)
     print('FRAMES', frames)
@@ -97,7 +109,6 @@ async def say(text):
         text])
     await animate_speech('speech.wav')
 
-
 async def pause(secs):
     n = 0
     while n < secs:
@@ -107,6 +118,10 @@ async def pause(secs):
                 await say(args[0])
             if cmd == 'say_file':
                 await animate_speech(args[0])
+            if cmd == 'play_video':
+                await play_video(args[0], args[1])
+            if cmd == 'stop_video':
+                await stop_video()
         await asyncio.sleep(0.1)
         n += 0.1
 

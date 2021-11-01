@@ -1,0 +1,10 @@
+[
+    { "title": "wade", "file": "static/scene.mp4", "start_time": "00:00:00" },
+    { "title": "teddy", "file": "static/scene.mp4", "start_time": "00:01:56" },
+    { "title": "teddy+max", "file": "static/scene.mp4", "start_time": "00:03:03" },
+    { "title": "skeleton", "file": "static/scene.mp4", "start_time": "00:03:40" },
+    { "title": "jennie", "file": "static/scene.mp4", "start_time": "00:04:25" },
+    { "title": "ghost", "file": "static/scene.mp4", "start_time": "00:05:18" },
+    { "title": "max", "file": "static/scene.mp4", "start_time": "00:05:55" },
+    { "title": "end", "file": "static/scene.mp4", "start_time": "00:07:00" }
+]

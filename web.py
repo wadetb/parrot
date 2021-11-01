@@ -1,3 +1,4 @@
+import json
 import os
 import subprocess
 
@@ -34,10 +35,12 @@ def wifi():
 @app.route('/')
 def index():
     local_ip = subprocess.check_output(
-        "ip addr show wlan0 | grep -Po 'inet \K[\d.]+'", shell=True).decode()
-    audio_files = [name.split('.')[0]
-                   for name in os.listdir('static') if name.endswith('.wav')]
-    return render_template('parrot.html', local_ip=local_ip, audio_files=audio_files)
+        "ip addr | grep -Po 'inet \K[\d.]+'", shell=True).decode()
+    audio_files = sorted([name.split('.')[0]
+                   for name in os.listdir('static') if name.endswith('.wav')])
+    with open('static/video.json') as f:
+        video_files = json.load(f)
+    return render_template('parrot.html', local_ip=local_ip, audio_files=audio_files, video_files=video_files)
 
 
 @app.route('/button')
@@ -86,6 +89,31 @@ def motor():
 def say_file():
     audio_file = 'static/' + request.args.get('file') + '.wav'
     sm.oob_queue.append(('say_file', [audio_file]))
+    return "OK"
+
+
+@app.route('/play_video')
+def play_video():
+    video_file = request.args.get('file')
+    start_time = request.args.get('start_time')
+    sm.oob_queue.append(('play_video', [video_file, start_time]))
+    return "OK"
+
+
+@app.route('/stop_video')
+def stop_video():
+    sm.oob_queue.append(('stop_video', []))
+    return "OK"
+
+
+@app.route('/oob')
+def oob():
+    api = request.args.get('api')
+    arg0 = request.args.get('arg0')
+    arg1 = request.args.get('arg1')
+    arg2 = request.args.get('arg2')
+    arg3 = request.args.get('arg3')
+    sm.oob_queue.append((api, [arg0, arg1, arg2, arg3]))
     return "OK"
 
 

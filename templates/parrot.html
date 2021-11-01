@@ -54,6 +54,15 @@ a { -webkit-user-select: none !important; }
 {% endfor %}
 </div>
 
+<h1>Video</h1>
+
+<div class='box2'>
+{% for video_file in video_files %} 
+<button class='btn' id="{{ video_file['title'] }}">{{ video_file['title'] }}</button>
+{% endfor %}
+<button class='btn' id="stop_video">stop video</button>
+</div>
+
 <hr/>
 
 <a href="http://{{ local_ip }}:5000/">local ip</a>
@@ -122,6 +131,23 @@ var audio_ids = [
 for (var i = 0; i < audio_ids.length; i++) {
 	var e = document.getElementById(audio_ids[i]);
 	e.addEventListener("mousedown", onAudio, false);
+}
+
+document.getElementById("stop_video").addEventListener("mousedown", function() {
+	get('/stop_video')
+})
+
+var video_ids = [
+{% for video_file in video_files %} 
+	{{ video_file|safe }},
+{% endfor %}
+];
+for (var i = 0; i < video_ids.length; i++) {
+	((title, file, start_time) => {
+		document.getElementById(title).addEventListener("mousedown", function() { 
+			get('/play_video?file=' + file + '&start_time=' + start_time ) 
+		}, false)
+	})(video_ids[i].title, video_ids[i].file, video_ids[i].start_time)
 }
 
 function toggleFullscreen() {
